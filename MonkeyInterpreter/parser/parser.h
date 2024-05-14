@@ -32,6 +32,7 @@ namespace parser
 			prefixParseFunctions[Token::INT] = [this]() { return this->parseIntegerLiteral(); };
 			prefixParseFunctions[Token::BANG] = [this]() { return this->parsePrefixExpression(); };
 			prefixParseFunctions[Token::MINUS] = [this]() { return this->parsePrefixExpression(); };
+			prefixParseFunctions[Token::LPAREN] = [this]() { return this->parseGroupedExpression(); };
 
 			infixParseFunctions[Token::PLUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
 			infixParseFunctions[Token::MINUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
@@ -107,10 +108,13 @@ namespace parser
 			{
 				return parseReturnStatement();
 			}
-			else {
+			else 
+			{
 				return parseExpressionStatement();
 			}
 			throw std::exception("Unexpected Token in 'parseStatement()'");
+
+			return nullptr;
 		}
 
 		ast::Statement* parseLetStatement()
@@ -186,6 +190,17 @@ namespace parser
 			nextToken();
 			expression->Right = parseExpression(PREFIX);
 			return expression;
+		}
+
+		ast::Expression* parseGroupedExpression()
+		{
+			nextToken();
+			ast::Expression* e = parseExpression(LOWEST);
+			if (!expectPeek(Token::RPAREN))
+			{
+				return nullptr;
+			}
+			return e;
 		}
 
 		ast::Expression* parseInfixExpression(ast::Expression* left)

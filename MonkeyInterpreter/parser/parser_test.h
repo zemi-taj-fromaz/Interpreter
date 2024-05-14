@@ -103,7 +103,7 @@ namespace parser
 	void TestParsingInfix()
 	{
 		std::string input =
-			"5 + 5 * 5 < !false;";
+			"(5 + 5) * 5 ";
 
 		Lexer::Lexer l = Lexer::Lexer(input);
 		parser::Parser p = Parser(l);
