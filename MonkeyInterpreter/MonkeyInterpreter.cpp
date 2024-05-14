@@ -1,14 +1,12 @@
-// MonkeyInterpreter.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+#pragma once
 
 #include <iostream>
 
 #include "lexer/Lexer.h"
-#include "token/Token.h"
 
 int main()
 {
-    Lexer::TestNextToken();
+	Lexer::Lexer::TestNextToken();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

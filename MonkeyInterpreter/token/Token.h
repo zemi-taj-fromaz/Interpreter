@@ -1,36 +1,60 @@
 #pragma once
 
 #include <string>
+#include <map>
+
 
 namespace Token
 {
+	static  std::string ILLEGAL = "ILLEGAL";
+	static  std::string _EOF = "EOF";
+	
+	static  std::string IDENT = "IDENT";
+	static  std::string INT = "INT";
+	 	 
+	static  std::string ASSIGN = "ASSIGN";
+	static  std::string PLUS = "PLUS";
+	 	 
+	static  std::string COMMA = "COMMA";
+	static  std::string SEMICOLON = "SEMICOLON";
+	 	 
+	static  std::string LPAREN = "LPAREN";
+	static  std::string RPAREN = "RPAREN";
+	static  std::string LBRACE = "LBRACE";
+	static  std::string RBRACE = "RBRACE";
+	 	 
+	static  std::string FUNCTION = "FUNCTION";
+	static  std::string LET = "LET";
+
+	const std::map<std::string, std::string> KEYWORDS{
+		{ "fn" , FUNCTION },
+		{ "let", LET }
+	};
+
 	struct Token
 	{
 		Token(){}
 		Token(std::string type, std::string Literal) : Type(type), Literal(Literal) {}
+
+
+		std::string LookupIdent(std::string ident)
+		{
+			auto it = KEYWORDS.find(ident);
+			if (it != KEYWORDS.end())
+			{
+				return it->second;
+			}
+
+			return IDENT;
+		}
+
 		std::string Type;		//which class of token does it belong to
 		std::string Literal;	// actual characters representing the token
 	};
 
-	const std::string ILLEGAL = "ILLEGAL";
-	const std::string _EOF = "EOF";
 
-	const std::string IDENT = "IDENT";
-	const std::string INT = "INT";
 
-	const std::string ASSIGN = "ASSIGN";
-	const std::string PLUS = "PLUS";
 
-	const std::string COMMA = "COMMA";
-	const std::string SEMICOLON = "SEMICOLON";
-
-	const std::string LPAREN = "LPAREN";
-	const std::string RPAREN = "RPAREN";
-	const std::string LBRACE = "LBRACE";
-	const std::string RBRACE = "RBRACE";
-
-	const std::string FUNCTION = "FUNCTION";
-	const std::string LET = "LET";
 }
 
 

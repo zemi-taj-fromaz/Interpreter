@@ -16,8 +16,17 @@ namespace Lexer
 			readChar();
 		}
 
+		static void TestNextToken();
+
 		void readChar();
 		Token::Token NextToken();
+		void skipWhitespace();
+
+		bool isLetter(char c);
+		bool isDigit(char c);
+
+		std::string readNumber();
+		std::string readIdentifier();
 
 		std::string Input;
 		int currentPosition;
@@ -25,5 +34,4 @@ namespace Lexer
 		char ch;
 	};
 
-	void TestNextToken();
 }
