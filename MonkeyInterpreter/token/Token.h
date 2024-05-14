@@ -14,6 +14,16 @@ namespace Token
 	 	 
 	static  std::string ASSIGN = "ASSIGN";
 	static  std::string PLUS = "PLUS";
+	static  std::string MINUS = "MINUS";
+	static  std::string BANG = "BANG";
+	static  std::string ASTERISK = "ASTERISK";
+	static  std::string SLASH = "SLASH";
+
+	static std::string EQUAL = "EQUAL";
+	static std::string UNEQUAL = "UNEQUAL";
+
+	static  std::string LT = "<";
+	static  std::string GT = ">";
 	 	 
 	static  std::string COMMA = "COMMA";
 	static  std::string SEMICOLON = "SEMICOLON";
@@ -25,10 +35,20 @@ namespace Token
 	 	 
 	static  std::string FUNCTION = "FUNCTION";
 	static  std::string LET = "LET";
+	static  std::string TRUE = "TRUE";
+	static  std::string FALSE = "FALSE";
+	static  std::string IF = "IF";
+	static  std::string ELSE = "ELSE";
+	static  std::string RETURN = "RETURN";
 
 	const std::map<std::string, std::string> KEYWORDS{
 		{ "fn" , FUNCTION },
-		{ "let", LET }
+		{ "let", LET },
+		{ "true", TRUE },
+		{ "false", FALSE },
+		{ "if", IF },
+		{ "else", ELSE },
+		{ "return", RETURN }
 	};
 
 	struct Token

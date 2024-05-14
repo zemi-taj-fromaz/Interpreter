@@ -25,6 +25,10 @@ namespace Lexer
 		bool isLetter(char c);
 		bool isDigit(char c);
 
+		bool isCompareOp(char c);
+
+		char peekChar();
+
 		std::string readNumber();
 		std::string readIdentifier();
 

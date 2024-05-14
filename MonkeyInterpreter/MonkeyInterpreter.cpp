@@ -6,7 +6,13 @@
 
 int main()
 {
-	Lexer::Lexer::TestNextToken();
+	try {
+		Lexer::Lexer::TestNextToken();
+	}
+	catch(std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

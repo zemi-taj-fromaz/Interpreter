@@ -12,7 +12,16 @@ namespace Lexer
 			"let add = fn(x, y) {		"
 			"	x + y;					"
 			"};							"
-			"let result = add(five, ten); ";
+			"let result = add(five, ten); "
+			"!-/*5;"
+			"5 < 10 > 5;"
+			"if( 5 < 10) {"
+			"	return true;"
+			"} else {"
+			"	return false;"
+			"}"
+			" 10 == 10;"
+			" 10 != 9;";
 
 		std::vector<Token::Token> testResult(
 			{
@@ -52,6 +61,50 @@ namespace Lexer
 				{Token::IDENT, "ten"},
 				{Token::RPAREN, ")"},
 				{Token::SEMICOLON, ";"},
+				
+	
+				{Token::BANG, "!"},
+				{Token::MINUS, "-"},
+				{Token::SLASH, "/"},
+				{Token::ASTERISK, "*"},
+				{Token::INT, "5"},
+				{Token::SEMICOLON, ";"},
+
+				{Token::INT, "5"},
+				{Token::LT, "<"},
+				{Token::INT, "10"},
+				{Token::GT, ">"},
+				{Token::INT, "5"},
+				{Token::SEMICOLON, ";"},
+
+				{Token::IF, "if"},
+				{Token::LPAREN, "("},
+				{Token::INT, "5"},
+				{Token::LT, "<"},
+				{Token::INT, "10"},
+				{Token::RPAREN, ")"},
+				{Token::LBRACE, "{"},
+				{Token::RETURN, "return"},
+				{Token::TRUE, "true"},
+				{Token::SEMICOLON, ";"},
+				{Token::RBRACE, "}"},
+				{Token::ELSE, "else"},
+				{Token::LBRACE, "{"},
+				{Token::RETURN, "return"},
+				{Token::FALSE, "false"},
+				{Token::SEMICOLON, ";"},
+				{Token::RBRACE, "}"},
+
+				{Token::INT, "10"},
+				{Token::EQUAL, "=="},
+				{Token::INT, "10"},
+				{Token::SEMICOLON, ";"},
+				{Token::INT, "10"},
+				{Token::UNEQUAL, "!="},
+				{Token::INT, "9"},
+				{Token::SEMICOLON, ";"},
+
+
 				{Token::_EOF, ""},
 			}
 		);
@@ -102,10 +155,29 @@ namespace Lexer
 		return c>= '0' && c <= '9';
 	}
 
+	bool Lexer::isCompareOp(char c)
+	{
+		if (peekChar() == '=')
+		{
+			readChar();
+			return true;
+		}
+		return false;
+	}
+
+	char Lexer::peekChar()
+	{
+		if (readPosition >= Input.size())
+		{
+			return 0;
+		}
+		return Input[readPosition];
+	}
+
 	std::string Lexer::readNumber()
 	{
 		int number = ch - 48;
-		while (isDigit(Input[readPosition]))
+		while (isDigit(peekChar()))
 		{
 			number *= 10;
 			readChar();
@@ -117,7 +189,7 @@ namespace Lexer
 	std::string Lexer::readIdentifier()
 	{
 		std::string identifier = std::string(1,ch);
-		while (isLetter(Input[readPosition]))
+		while (isLetter(peekChar()))
 		{
 			readChar();
 			identifier += std::string(1, ch);
@@ -133,7 +205,15 @@ namespace Lexer
 
 		switch (ch) {
 		case '=':
-			token = Token::Token(Token::ASSIGN, std::string(1, ch));
+			if (isCompareOp(ch))
+			{
+				token.Literal = "==";
+				token.Type = Token::EQUAL;
+			}
+			else
+			{
+				token = Token::Token(Token::ASSIGN, std::string(1, ch));
+			}
 			break;
 		case ';':
 			token = Token::Token(Token::SEMICOLON, std::string(1, ch));
@@ -149,6 +229,32 @@ namespace Lexer
 			break;
 		case '+':
 			token = Token::Token(Token::PLUS, std::string(1, ch));
+			break;
+		case '-':
+			token = Token::Token(Token::MINUS, std::string(1, ch));
+			break;
+		case '!':
+			if (isCompareOp(ch))
+			{
+				token.Literal = "!=";
+				token.Type = Token::UNEQUAL;
+			}
+			else
+			{
+				token = Token::Token(Token::BANG, std::string(1, ch));
+			}
+			break;
+		case '*':
+			token = Token::Token(Token::ASTERISK, std::string(1, ch));
+			break;
+		case '/':
+			token = Token::Token(Token::SLASH, std::string(1, ch));
+			break;
+		case '<':
+			token = Token::Token(Token::LT, std::string(1, ch));
+			break;
+		case '>':
+			token = Token::Token(Token::GT, std::string(1, ch));
 			break;
 		case '{':
 			token = Token::Token(Token::LBRACE, std::string(1, ch));
