@@ -19,7 +19,39 @@ namespace ast
 
 	struct Expression
 	{
+
+		virtual std::string String() = 0;
 		virtual void expressionNode() = 0;
+	};
+
+	struct IntegerLiteral : public Expression
+	{
+		IntegerLiteral(Token::Token token, std::string literal) : Token(token), Value(std::stoi(literal)) {}
+		Token::Token Token;
+		int Value;
+
+		std::string String() {
+			return Token.Literal;
+		}
+
+		virtual void expressionNode() override {}
+	};
+
+	struct Boolean : public Expression
+	{
+		Boolean(Token::Token token) : Token(token) {
+			if (token.Literal == "true") Value = true;
+			else if (token.Literal == "false") Value = false;
+			else throw std::exception("Bad Init of Boolean Expression + you're gay");
+		}
+		Token::Token Token;
+		bool Value;
+
+		std::string String() {
+			return Token.Literal;
+		}
+
+		virtual void expressionNode() override {}
 	};
 
 	struct Identifier : public Expression
@@ -27,6 +59,40 @@ namespace ast
 		Identifier(Token::Token token, std::string literal) : Token(token), Value(literal) {}
 		Token::Token Token;
 		std::string Value;
+
+		std::string String() { return Value; }
+
+		virtual void expressionNode() override {}
+	};
+
+	struct PrefixExpression : public Expression
+	{
+		PrefixExpression(Token::Token token, std::string literal) : Token(token), Value(literal), Operator(token.Literal) {}
+		Token::Token Token;
+		std::string Value;
+		std::string Operator;
+		Expression* Right;
+
+		std::string String() {
+			return "(" + Operator + Right->String() + ")";
+		}
+
+		virtual void expressionNode() override {}
+	};
+
+	struct InfixExpression : public Expression
+	{
+		InfixExpression(Token::Token token) : Token(token), Operator(Token.Literal) {}
+		InfixExpression(Token::Token token, Expression* left) : Token(token), Operator(Token.Literal), Left(left) {}
+		Token::Token Token;
+		std::string Operator;
+		Expression* Left;
+		Expression* Right;
+
+		std::string String() {
+			return "(" + Left->String() + " " + Operator +  " " + Right->String() + ")";
+		}
+
 		virtual void expressionNode() override {}
 	};
 
@@ -36,6 +102,11 @@ namespace ast
 		Identifier* Name;
 		Expression* Value;
 
+		std::string String()
+		{
+			return Token.Literal + " " + Name->Value + " = " + (Value != nullptr ? Value->String() : "") + ";";
+		}
+
 		virtual void statementNode() override {};
 	};
 
@@ -43,6 +114,24 @@ namespace ast
 	{
 		Token::Token Token;
 		Expression* Value;
+
+		std::string String()
+		{
+			return Token.Literal + " " + (Value != nullptr ? Value->String() : " ") + ";";
+		}
+
+		virtual void statementNode() override {};
+	};
+
+	struct ExpressionStatement : public Statement
+	{
+		Token::Token Token;
+		Expression* Value;
+
+		std::string String()
+		{
+			return Value != nullptr ? Value->String() : " ";
+		}
 
 		virtual void statementNode() override {};
 	};

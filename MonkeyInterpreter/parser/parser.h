@@ -27,6 +27,8 @@ namespace parser
 			nextToken(); // so currToken and peekToken are set
 
 			prefixParseFunctions[Token::IDENT] = [this]() { return this->parseIdentifier(); };
+			prefixParseFunctions[Token::TRUE] = [this]() { return this->parseBoolean(); };
+			prefixParseFunctions[Token::FALSE] = [this]() { return this->parseBoolean(); };
 			prefixParseFunctions[Token::INT] = [this]() { return this->parseIntegerLiteral(); };
 			prefixParseFunctions[Token::BANG] = [this]() { return this->parsePrefixExpression(); };
 			prefixParseFunctions[Token::MINUS] = [this]() { return this->parsePrefixExpression(); };
@@ -165,6 +167,11 @@ namespace parser
 		ast::Expression* parseIdentifier()
 		{
 			return new ast::Identifier(currToken, currToken.Literal);
+		}
+
+		ast::Expression* parseBoolean()
+		{
+			return new ast::Boolean(currToken);
 		}
 
 		ast::Expression* parseIntegerLiteral()
