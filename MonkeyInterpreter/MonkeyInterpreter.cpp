@@ -6,13 +6,23 @@
 
 int main()
 {
-	try {
-		Lexer::Lexer::TestNextToken();
-	}
-	catch(std::exception& e)
+    std::string input;
+    while (std::getline(std::cin, input)) 
 	{
-		std::cout << e.what() << std::endl;
-	}
+		Lexer::Lexer l = Lexer::Lexer(input);
+
+		for (Token::Token token = l.NextToken(); token.Type != Token::_EOF; token = l.NextToken())
+		{
+			std::cout << token.Type << " " << token.Literal << std::endl;
+		}
+    }
+	//try {
+	//	Lexer::Lexer::TestNextToken();
+	//}
+	//catch(std::exception& e)
+	//{
+	//	std::cout << e.what() << std::endl;
+	//}
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
