@@ -15,6 +15,7 @@ namespace ast
 	struct Statement
 	{
 		virtual void statementNode() = 0;
+		virtual std::string String() = 0;
 	};
 
 	struct Expression
@@ -96,6 +97,8 @@ namespace ast
 		virtual void expressionNode() override {}
 	};
 
+
+
 	struct LetStatement : public Statement
 	{
 		Token::Token Token;
@@ -104,7 +107,7 @@ namespace ast
 
 		std::string String()
 		{
-			return Token.Literal + " " + Name->Value + " = " + (Value != nullptr ? Value->String() : "") + ";";
+			return Name->Value + " = " + (Value != nullptr ? Value->String() : "") + ";";
 		}
 
 		virtual void statementNode() override {};
@@ -134,6 +137,44 @@ namespace ast
 		}
 
 		virtual void statementNode() override {};
+	};
+
+	struct BlockStatement : public Statement
+	{
+		BlockStatement(){}
+		Token::Token Token;
+		std::vector<Statement*> statements;
+
+		std::string String() {
+			std::string ret = "";
+			ret += Token.Literal;
+			for(auto* s : statements)
+			{
+				ret += s->String();
+				ret += "\n";
+			}
+			return ret;
+		}
+
+		virtual void statementNode() override {};
+
+	};
+
+	struct IfExpression : public Expression
+	{
+		IfExpression(Token::Token token) : Token(token) {}
+		IfExpression(Token::Token token, Expression* left) : Token(token), Condition(left) {}
+		Token::Token Token;
+		Expression* Condition;
+		BlockStatement* Consequence;
+		BlockStatement* Alternative{ nullptr };
+
+		std::string String() {
+			return "( if (" + Condition->String() + ") " + Consequence->String() + "} " + (Alternative != nullptr ? ("else" + Alternative->String()) : " ") + ")";
+			//return "( )";
+		}
+
+		virtual void expressionNode() override {}
 	};
 
 	struct Program

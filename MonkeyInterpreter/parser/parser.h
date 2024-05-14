@@ -33,6 +33,7 @@ namespace parser
 			prefixParseFunctions[Token::BANG] = [this]() { return this->parsePrefixExpression(); };
 			prefixParseFunctions[Token::MINUS] = [this]() { return this->parsePrefixExpression(); };
 			prefixParseFunctions[Token::LPAREN] = [this]() { return this->parseGroupedExpression(); };
+			prefixParseFunctions[Token::IF] = [this]() { return this->parseIfExpression(); };
 
 			infixParseFunctions[Token::PLUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
 			infixParseFunctions[Token::MINUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
@@ -144,6 +145,20 @@ namespace parser
 			return rs;
 		}
 
+		ast::BlockStatement* parseBlockStatement()
+		{
+			ast::BlockStatement* bs = new ast::BlockStatement();
+			bs->Token = currToken;
+			nextToken();
+			while (currToken.Type != Token::RBRACE && currToken.Type != Token::_EOF)
+			{
+				auto* s = parseStatement();
+				if(s) bs->statements.push_back(s);
+				nextToken();
+			}
+			return bs;
+		}
+
 		ast::Statement* parseExpressionStatement()
 		{
 			ast::ExpressionStatement* rs = new ast::ExpressionStatement();
@@ -194,7 +209,6 @@ namespace parser
 
 		ast::Expression* parseGroupedExpression()
 		{
-			nextToken();
 			ast::Expression* e = parseExpression(LOWEST);
 			if (!expectPeek(Token::RPAREN))
 			{
@@ -202,6 +216,29 @@ namespace parser
 			}
 			return e;
 		}
+
+		ast::Expression* parseIfExpression()
+		{
+			ast::IfExpression* e = new ast::IfExpression(currToken);
+			if (!expectPeek(Token::LPAREN)) return nullptr;
+			nextToken();
+
+			e->Condition = parseExpression(LOWEST);
+			if (!expectPeek(Token::RPAREN)) return nullptr;
+			if (!expectPeek(Token::LBRACE)) return nullptr;
+
+			e->Consequence = parseBlockStatement();
+		
+			if (peekToken.Type == Token::ELSE)
+			{
+				nextToken();
+				if (!expectPeek(Token::LBRACE)) return nullptr;
+				e->Alternative = parseBlockStatement();
+			}
+
+			return e;
+		}
+
 
 		ast::Expression* parseInfixExpression(ast::Expression* left)
 		{

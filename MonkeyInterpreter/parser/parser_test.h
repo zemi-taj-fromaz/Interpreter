@@ -103,7 +103,8 @@ namespace parser
 	void TestParsingInfix()
 	{
 		std::string input =
-			"(5 + 5) * 5 ";
+			"let zakon = 3;";
+			//"if( true ) { let mamu = 2; }";
 
 		Lexer::Lexer l = Lexer::Lexer(input);
 		parser::Parser p = Parser(l);
@@ -116,9 +117,9 @@ namespace parser
 		for (ast::Statement* s : program.Statements)
 		{
 			//if (!testReturnStatement(s, "return")) throw std::exception("You're gay");
-			ast::ExpressionStatement* es = dynamic_cast<ast::ExpressionStatement*>(s);
+			ast::LetStatement* es = dynamic_cast<ast::LetStatement*>(s);
 			if (!es) throw std::exception("You're gay");
-			std::cout << es->Value->String() << std::endl;
+			std::cout << es->String() << std::endl;
 		}
 		std::cout << "PARSED CORRECTLY" << std::endl;
 	}
