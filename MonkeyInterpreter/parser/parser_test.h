@@ -35,6 +35,23 @@ namespace parser
 		return true;
 	}
 
+
+	bool testExpressionStatement(ast::Statement* s, std::string name)
+	{
+		ast::ExpressionStatement* es;
+		if (ast::ExpressionStatement* f = dynamic_cast<ast::ExpressionStatement*>(s)) {
+			es = f;
+		}
+		else
+		{
+			throw std::exception();
+		}
+
+		if (es->Token.Literal != name) return false;
+
+		return true;
+	}
+
 	void TestLetStatements()
 	{
 		std::string input =
@@ -76,12 +93,34 @@ namespace parser
 			std::cout << "program empty" << std::endl;
 		}
 
-		std::vector<std::string> expectedIdentifiers({ "x", "y", "foobar" });
-
-		int i = 0;
 		for (ast::Statement* s : program.Statements)
 		{
 			if (!testReturnStatement(s, "return")) throw std::exception("You're gay");
+		}
+		std::cout << "PARSED CORRECTLY" << std::endl;
+	}
+
+	void TestParsingInfix()
+	{
+		std::string input =
+			"5 + 5 * 5;"
+			"5 * 5;"
+			"5 == 5;";
+
+		Lexer::Lexer l = Lexer::Lexer(input);
+		parser::Parser p = Parser(l);
+
+		ast::Program program = p.ParseProgram();
+		if (program.Statements.size() == 0) {
+			std::cout << "program empty" << std::endl;
+		}
+
+		for (ast::Statement* s : program.Statements)
+		{
+			//if (!testReturnStatement(s, "return")) throw std::exception("You're gay");
+			ast::ExpressionStatement* es = dynamic_cast<ast::ExpressionStatement*>(s);
+			if (!es) throw std::exception("You're gay");
+			std::cout << es->Value->String() << std::endl;
 		}
 		std::cout << "PARSED CORRECTLY" << std::endl;
 	}

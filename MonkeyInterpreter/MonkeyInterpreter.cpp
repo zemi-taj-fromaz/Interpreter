@@ -8,7 +8,7 @@
 int main()
 {
     std::string input;
-	parser::TestReturnStatements();
+	parser::TestParsingInfix();
  //   while (std::getline(std::cin, input)) 
 	//{
 	//	Lexer::Lexer l = Lexer::Lexer(input);
