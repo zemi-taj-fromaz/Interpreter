@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ast\ast.h" />
     <ClCompile Include="lexer\Lexer.h" />
     <ClCompile Include="lexer\Lexer.cpp" />
     <ClCompile Include="MonkeyInterpreter.cpp" />
@@ -138,6 +139,8 @@
     <ClCompile Include="token\Token.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="parser\parser.h" />
+    <ClInclude Include="parser\parser_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
