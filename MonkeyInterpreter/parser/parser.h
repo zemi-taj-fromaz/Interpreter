@@ -128,9 +128,14 @@ namespace parser
 
 			ls->Name = new ast::Identifier(currToken, currToken.Literal);
 
-			//SKIP EXPRESSION UNTIL SEMICOLON (TODO)
-			while (currToken.Type != Token::SEMICOLON) nextToken();
-			
+			if (!expectPeek(Token::ASSIGN)) { throw std::exception("You're gay"); }
+
+			nextToken();
+
+			ls->Value = parseExpression(LOWEST);
+
+			if (!expectPeek(Token::SEMICOLON)) { throw std::exception("You're gay"); }
+
 			return ls;
 		}
 
@@ -139,8 +144,12 @@ namespace parser
 			ast::ReturnStatement* rs = new ast::ReturnStatement();
 			rs->Token = currToken;
 
-			//SKIP EXPRESSION UNTIL SEMICOLON (TODO)
-			while (currToken.Type != Token::SEMICOLON) nextToken();
+			nextToken();
+
+			rs->Value = parseExpression(LOWEST);
+
+			if (!expectPeek(Token::SEMICOLON)) { throw std::exception("You're gay"); }
+
 
 			return rs;
 		}
