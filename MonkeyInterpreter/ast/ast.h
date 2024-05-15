@@ -177,6 +177,31 @@ namespace ast
 		virtual void expressionNode() override {}
 	};
 
+
+	struct FunctionLiteral : public Expression
+	{
+		FunctionLiteral(Token::Token token) : Token(token) {}
+		Token::Token Token; //fn
+		std::vector<Identifier*> Parameters;
+		BlockStatement* Body;
+
+		std::string String() {
+			std::string ret = "";
+			ret += Token.Literal + "(";
+			for (auto* p : Parameters)
+			{
+				ret += p->String() + ",";
+			}
+			ret += ") {";
+			ret += Body->String();
+			ret += "};";
+			return ret;
+		}
+
+		virtual void expressionNode() override {}
+	};
+
+
 	struct Program
 	{
 		std::vector<Statement*> Statements;

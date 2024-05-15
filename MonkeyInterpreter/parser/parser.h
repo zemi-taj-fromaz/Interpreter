@@ -34,6 +34,7 @@ namespace parser
 			prefixParseFunctions[Token::MINUS] = [this]() { return this->parsePrefixExpression(); };
 			prefixParseFunctions[Token::LPAREN] = [this]() { return this->parseGroupedExpression(); };
 			prefixParseFunctions[Token::IF] = [this]() { return this->parseIfExpression(); };
+			prefixParseFunctions[Token::FUNCTION] = [this]() { return this->parseFunctionLiteral(); };
 
 			infixParseFunctions[Token::PLUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
 			infixParseFunctions[Token::MINUS] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
@@ -168,6 +169,34 @@ namespace parser
 			return bs;
 		}
 
+		std::vector<ast::Identifier*> parseParameters()
+		{
+			std::vector<ast::Identifier*> Identifiers;
+			
+			nextToken();
+
+			if (currToken.Type == Token::RPAREN)
+			{
+				return Identifiers;
+			}
+			
+			ast::Identifier* i = new ast::Identifier(currToken, currToken.Literal);
+
+			Identifiers.push_back(i);
+
+			while (peekToken.Type == Token::COMMA)
+			{
+				nextToken();
+				nextToken();
+				ast::Identifier* id = new ast::Identifier(currToken, currToken.Literal);
+				Identifiers.push_back(id);
+			}
+			
+			if (!expectPeek(Token::RPAREN)) throw std::exception("You're gay");
+
+			return Identifiers;
+		}
+
 		ast::Statement* parseExpressionStatement()
 		{
 			ast::ExpressionStatement* rs = new ast::ExpressionStatement();
@@ -248,6 +277,19 @@ namespace parser
 			return e;
 		}
 
+		ast::Expression* parseFunctionLiteral()
+		{
+			ast::FunctionLiteral* e = new ast::FunctionLiteral(currToken);
+			if (!expectPeek(Token::LPAREN)) return nullptr;
+
+			e->Parameters = parseParameters();
+
+			if (!expectPeek(Token::LBRACE)) return nullptr;
+		
+			e->Body = parseBlockStatement();
+
+			return e;
+		}
 
 		ast::Expression* parseInfixExpression(ast::Expression* left)
 		{
