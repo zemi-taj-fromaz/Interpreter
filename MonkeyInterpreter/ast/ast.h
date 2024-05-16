@@ -107,7 +107,7 @@ namespace ast
 
 		std::string String()
 		{
-			return Name->Value + " = " + (Value != nullptr ? Value->String() : "") + ";";
+			return "LEX: " + Name->Value + " = " + (Value != nullptr ? Value->String() : "") + ";";
 		}
 
 		virtual void statementNode() override {};
@@ -120,7 +120,7 @@ namespace ast
 
 		std::string String()
 		{
-			return Token.Literal + " " + (Value != nullptr ? Value->String() : " ") + ";";
+			return "RET :" + Token.Literal + " " + (Value != nullptr ? Value->String() : " ") + ";";
 		}
 
 		virtual void statementNode() override {};
@@ -133,7 +133,7 @@ namespace ast
 
 		std::string String()
 		{
-			return Value != nullptr ? Value->String() : " ";
+			return "EXPR: " + (Value != nullptr ? Value->String() : " ");
 		}
 
 		virtual void statementNode() override {};
@@ -201,9 +201,39 @@ namespace ast
 		virtual void expressionNode() override {}
 	};
 
+	struct CallExpression : public Expression
+	{
+		CallExpression(Token::Token token, ast::Expression* e) : Token(token), Function(e) {}
+		Token::Token Token; // (
+		Expression* Function;
+		std::vector<Expression*> Arguments;
+		
+
+		std::string String() {
+			std::string ret = "";
+			ret += Function->String() + "(";
+			for (auto* p : Arguments)
+			{
+				ret += p->String() + ",";
+			}
+			ret += ")";
+			return ret;
+		}
+
+		virtual void expressionNode() override {}
+	};
 
 	struct Program
 	{
+		std::string String()
+		{
+			std::string ret = "";
+			for (auto* s : Statements)
+			{
+				ret += s->String();
+			}
+			return ret;
+		}
 		std::vector<Statement*> Statements;
 	};
 }

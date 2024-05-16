@@ -8,22 +8,17 @@
 int main()
 {
     std::string input;
-	parser::TestParsingInfix();
- //   while (std::getline(std::cin, input)) 
-	//{
-	//	Lexer::Lexer l = Lexer::Lexer(input);
+	//parser::TestParsingInfix();
+    while (std::getline(std::cin, input)) 
+	{
+		Lexer::Lexer l = Lexer::Lexer(input);
+		parser::Parser p = parser::Parser(l);
 
-	//	for (Token::Token token = l.NextToken(); token.Type != Token::_EOF; token = l.NextToken())
-	//	{
-	//		std::cout << token.Type << " " << token.Literal << std::endl;
-	//	}
- //   }
-	//try {
-	//	Lexer::Lexer::TestNextToken();
-	//}
-	//catch(std::exception& e)
-	//{
-	//	std::cout << e.what() << std::endl;
-	//}
+		ast::Program program = p.ParseProgram();
+		
+		std::cout << program.String() << std::endl;
+	
+    }
+	
 }
 

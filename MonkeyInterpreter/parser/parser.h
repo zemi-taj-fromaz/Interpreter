@@ -44,6 +44,7 @@ namespace parser
 			infixParseFunctions[Token::UNEQUAL] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
 			infixParseFunctions[Token::LT] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
 			infixParseFunctions[Token::GT] = [this](ast::Expression* left) { return this->parseInfixExpression(left); };
+			infixParseFunctions[Token::LPAREN] = [this](ast::Expression* left) { return this->parseCallExpression(left); };
 
 			presedences[Token::EQUAL] = OperatorPresedence::EQUALS;
 			presedences[Token::UNEQUAL] = OperatorPresedence::EQUALS;
@@ -53,6 +54,7 @@ namespace parser
 			presedences[Token::MINUS] = OperatorPresedence::SUM;
 			presedences[Token::SLASH] = OperatorPresedence::PRODUCT;
 			presedences[Token::ASTERISK] = OperatorPresedence::PRODUCT;
+			presedences[Token::LPAREN] = OperatorPresedence::CALL;
 		}
 
 		Lexer::Lexer lexer;
@@ -197,13 +199,37 @@ namespace parser
 			return Identifiers;
 		}
 
+		std::vector<ast::Expression*> parseArguments()
+		{
+			std::vector<ast::Expression*> Arguments;
+
+
+			if (currToken.Type == Token::RPAREN)
+			{
+				return Arguments;
+			}
+
+			Arguments.push_back(parseExpression(LOWEST));
+
+			while (peekToken.Type == Token::COMMA)
+			{
+				nextToken();
+				nextToken();
+				Arguments.push_back(parseExpression(LOWEST));
+			}
+
+			if (!expectPeek(Token::RPAREN)) throw std::exception("You're gay");
+
+			return Arguments;
+		}
+
 		ast::Statement* parseExpressionStatement()
 		{
 			ast::ExpressionStatement* rs = new ast::ExpressionStatement();
 
 			rs->Value = parseExpression(LOWEST);
 
-			expectPeek(Token::SEMICOLON);
+			if(!expectPeek(Token::SEMICOLON)) throw std::exception("You're gay");
 
 			return rs;
 		}
@@ -298,6 +324,15 @@ namespace parser
 			int presedence = currPrecedence();
 			nextToken();
 			expression->Right = parseExpression(presedence);
+			return expression;
+		}
+
+		ast::Expression* parseCallExpression(ast::Expression* left)
+		{
+			ast::CallExpression* expression = new ast::CallExpression(currToken, left);
+
+			nextToken();
+			expression->Arguments = parseArguments();
 			return expression;
 		}
 	};
