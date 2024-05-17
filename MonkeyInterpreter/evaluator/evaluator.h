@@ -5,15 +5,12 @@
 
 namespace eval
 {
+	obj::Object* Evaluate(ast::Node* node);
 
 	obj::Boolean* TRUE = new obj::Boolean(true);
 	obj::Boolean* FALSE = new obj::Boolean(false);
 
 	obj::Null* null = new obj::Null();
-
-
-
-	obj::Object* Evaluate(ast::Node* node);
 
 
 	obj::Object* evalStatements(std::vector<ast::Statement*> statements)
@@ -22,6 +19,23 @@ namespace eval
 		for (auto* s : statements)
 		{
 			ret = Evaluate(s);
+			if (ret->Type() == obj::RETURN_OBJ) {
+				auto* retObj = dynamic_cast<obj::ReturnValue*>(ret);
+				return retObj->obj;
+			}
+		}
+		return ret;
+	}
+
+	obj::Object* evalBlockStatements(std::vector<ast::Statement*> statements)
+	{
+		obj::Object* ret = nullptr;
+		for (auto* s : statements)
+		{
+			ret = Evaluate(s);
+			if (ret->Type() == obj::RETURN_OBJ) {
+				return ret;
+			}
 		}
 		return ret;
 	}
@@ -151,6 +165,38 @@ namespace eval
 		return null;
 	}
 
+	obj::Object* evaluateIfExpr(ast::IfExpression* ifExpr)
+	{
+		auto* condition = Evaluate(ifExpr->Condition);
+
+		if (condition->Type() == obj::INTEGER_OBJ)
+		{
+			if (auto* intCondition = dynamic_cast<obj::Integer*>(condition))
+			{
+				if (intCondition->Value == 0)
+				{
+					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative) : null);
+				}
+				return Evaluate(ifExpr->Consequence);
+			}
+			return null;
+		}
+
+		if (condition->Type() == obj::BOOLEAN_OBJ)
+		{
+			if (auto* boolCondition = dynamic_cast<obj::Boolean*>(condition))
+			{
+				if (boolCondition->Value == false)
+				{
+					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative) : null);
+				}
+				return Evaluate(ifExpr->Consequence);
+			}
+			return null;
+		}
+		return null;
+	}
+
 	obj::Object* Evaluate(ast::Node* node)
 	{
 
@@ -162,6 +208,19 @@ namespace eval
 		{
 			return Evaluate(exprStmt->Value);
 		} 
+		else if (auto* blkStmt = dynamic_cast<ast::BlockStatement*>(node))
+		{
+			return evalBlockStatements(blkStmt->statements);
+		}
+		else if (auto* retStmt = dynamic_cast<ast::ReturnStatement*>(node))
+		{
+			return new obj::ReturnValue(Evaluate(retStmt->Value));
+		}
+		else if (auto* ifExpr = dynamic_cast<ast::IfExpression*>(node))
+		{
+			return evaluateIfExpr(ifExpr);
+		
+		}
 		else if (auto* intPtr = dynamic_cast<ast::IntegerLiteral*>(node))
 		{
 			return new obj::Integer(intPtr->Value);
