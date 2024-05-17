@@ -2,6 +2,7 @@
 
 #include "object/object.h"
 #include "ast/ast.h"
+#include "environment/environment.h"
 
 namespace eval
 {
@@ -13,12 +14,12 @@ namespace eval
 	obj::Null* null = new obj::Null();
 
 
-	obj::Object* evalStatements(std::vector<ast::Statement*> statements)
+	obj::Object* evalStatements(std::vector<ast::Statement*> statements, env::Environment& e)
 	{
 		obj::Object* ret = nullptr;
 		for (auto* s : statements)
 		{
-			ret = Evaluate(s);
+			ret = Evaluate(s, e);
 			if (ret->Type() == obj::RETURN_OBJ) {
 				auto* retObj = dynamic_cast<obj::ReturnValue*>(ret);
 				return retObj->obj;
@@ -31,12 +32,12 @@ namespace eval
 		return ret;
 	}
 
-	obj::Object* evalBlockStatements(std::vector<ast::Statement*> statements)
+	obj::Object* evalBlockStatements(std::vector<ast::Statement*> statements, env::Environment& e)
 	{
 		obj::Object* ret = nullptr;
 		for (auto* s : statements)
 		{
-			ret = Evaluate(s);
+			ret = Evaluate(s, e);
 			if (ret->Type() == obj::RETURN_OBJ) {
 				return ret;
 			}
@@ -47,7 +48,7 @@ namespace eval
 		return ret;
 	}
 
-	obj::Object* evalBangOperator(obj::Object* obj)
+	obj::Object* evalBangOperator(obj::Object* obj, env::Environment& e)
 	{
 		if (obj->Type() == obj::INTEGER_OBJ)
 		{
@@ -64,7 +65,7 @@ namespace eval
 		return new obj::ErrorObject("Cannot call ! operator on that type of obj");
 	}
 
-	obj::Object* evalMinusPrefixOperator(obj::Object* obj)
+	obj::Object* evalMinusPrefixOperator(obj::Object* obj, env::Environment& e)
 	{
 		if (obj->Type() != obj::INTEGER_OBJ)
 		{
@@ -80,29 +81,28 @@ namespace eval
 		return new obj::ErrorObject("Cannot call - prefix operator on object that is not INT");
 	}
 
-	obj::Object* evaluatePrefixExpr(char oper, obj::Object* obj)
+	obj::Object* evaluatePrefixExpr(char oper, obj::Object* obj,env::Environment& e)
 	{
 		switch (oper)
 		{
 			case '!':
 			{
-				return evalBangOperator(obj);
+				return evalBangOperator(obj, e);
 			}
 			case '-':
 			{
-				return evalMinusPrefixOperator(obj);
+				return evalMinusPrefixOperator(obj, e);
 			}
 			default:
 				return new obj::ErrorObject("Invalid prefix operator");
 		}
 	}
 
-	obj::Object* evalNumericalInfixOperator(char oper, obj::Object* left, obj::Object* right)
+	obj::Object* evalNumericalInfixOperator(char oper, obj::Object* left, obj::Object* right, env::Environment& e)
 	{
 		auto* leftInt = dynamic_cast<obj::Integer*>(left);
 		auto* rightInt = dynamic_cast<obj::Integer*>(right);
 		if (!leftInt || !rightInt) return new obj::ErrorObject("Cannot call infix numerical operator(*,+,-,/) on objects that are not INT");
-
 
 		switch (oper)
 		{
@@ -129,7 +129,7 @@ namespace eval
 		}
 	}
 
-	obj::Object* evalLogicalInfixOperator(std::string oper, obj::Object* left, obj::Object* right)
+	obj::Object* evalLogicalInfixOperator(std::string oper, obj::Object* left, obj::Object* right, env::Environment& e)
 	{
 
 		if (left->Type() == obj::INTEGER_OBJ && right->Type() == obj::INTEGER_OBJ)
@@ -160,24 +160,24 @@ namespace eval
 
 	}
 
-	obj::Object* evaluateInfixExpr(std::string oper, obj::Object* left, obj::Object* right)
+	obj::Object* evaluateInfixExpr(std::string oper, obj::Object* left, obj::Object* right, env::Environment& e)
 	{
 		if (oper == "+" || oper == "-" || oper == "*" || oper == "/")
 		{
-			return evalNumericalInfixOperator(oper[0], left, right);
+			return evalNumericalInfixOperator(oper[0], left, right, e);
 
 		}
 		if (oper == ">" || oper == "<" || oper == "==" || oper == "!=")
 		{
-			return evalLogicalInfixOperator(oper, left, right);
+			return evalLogicalInfixOperator(oper, left, right, e);
 		}
 		return new obj::ErrorObject("Unsupported infix operator");
 
 	}
 
-	obj::Object* evaluateIfExpr(ast::IfExpression* ifExpr)
+	obj::Object* evaluateIfExpr(ast::IfExpression* ifExpr, env::Environment& e)
 	{
-		auto* condition = Evaluate(ifExpr->Condition);
+		auto* condition = Evaluate(ifExpr->Condition, e);
 
 		if (condition->Type() == obj::INTEGER_OBJ)
 		{
@@ -185,9 +185,9 @@ namespace eval
 			{
 				if (intCondition->Value == 0)
 				{
-					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative) : null);
+					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative, e) : null);
 				}
-				return Evaluate(ifExpr->Consequence);
+				return Evaluate(ifExpr->Consequence, e);
 			}
 			return null;
 		}
@@ -198,9 +198,9 @@ namespace eval
 			{
 				if (boolCondition->Value == false)
 				{
-					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative) : null);
+					return (ifExpr->Alternative != nullptr ? Evaluate(ifExpr->Alternative, e) : null);
 				}
-				return Evaluate(ifExpr->Consequence);
+				return Evaluate(ifExpr->Consequence, e);
 			}
 			return null;
 		}
@@ -208,30 +208,42 @@ namespace eval
 
 	}
 
-	obj::Object* Evaluate(ast::Node* node)
+	obj::Object* Evaluate(ast::Node* node, env::Environment& e)
 	{
 
 		if (auto* program = dynamic_cast<ast::Program*>(node))
 		{
-			return evalStatements(program->Statements);
+			return evalStatements(program->Statements, e);
 		}
 		else if (auto* exprStmt = dynamic_cast<ast::ExpressionStatement*>(node))
 		{
-			return Evaluate(exprStmt->Value);
+			return Evaluate(exprStmt->Value, e);
 		} 
 		else if (auto* blkStmt = dynamic_cast<ast::BlockStatement*>(node))
 		{
-			return evalBlockStatements(blkStmt->statements);
+			return evalBlockStatements(blkStmt->statements, e);
 		}
 		else if (auto* retStmt = dynamic_cast<ast::ReturnStatement*>(node))
 		{
-			obj::Object* o = Evaluate(retStmt->Value);
+			obj::Object* o = Evaluate(retStmt->Value, e);
 			if (o->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in return statement");
 			return new obj::ReturnValue(o);
 		}
+		else if (auto* letStmt = dynamic_cast<ast::LetStatement*>(node))
+		{
+			obj::Object* o = Evaluate(letStmt->Value, e);
+			if (o->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in return statement");
+			e.set(letStmt->Name->Value, o);
+			return new obj::ReturnValue(o);
+		}
+		else if (auto* identifier = dynamic_cast<ast::Identifier*>(node))
+		{
+			obj::Object* o = e.get(identifier->Value);
+			return (o == nullptr ? new obj::ErrorObject("Identifier not found") : o);
+		}
 		else if (auto* ifExpr = dynamic_cast<ast::IfExpression*>(node))
 		{
-			return evaluateIfExpr(ifExpr);
+			return evaluateIfExpr(ifExpr, e);
 		
 		}
 		else if (auto* intPtr = dynamic_cast<ast::IntegerLiteral*>(node))
@@ -244,20 +256,20 @@ namespace eval
 		}
 		else if (auto* prefixExpr = dynamic_cast<ast::PrefixExpression*>(node))
 		{
-			auto* right = Evaluate(prefixExpr->Right);
+			auto* right = Evaluate(prefixExpr->Right, e);
 			if (right->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in perfix expr");
 			char OPER = prefixExpr->Operator[0];
-			return evaluatePrefixExpr(OPER, right);
+			return evaluatePrefixExpr(OPER, right, e);
 		}
 		else if (auto* infixExpr = dynamic_cast<ast::InfixExpression*>(node))
 		{
-			auto* left = Evaluate(infixExpr->Left);
+			auto* left = Evaluate(infixExpr->Left, e);
 			if (left->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in left infix expr");
 
-			auto* right = Evaluate(infixExpr->Right);
+			auto* right = Evaluate(infixExpr->Right, e);
 			if (right->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in right infix expr");
 
-			return evaluateInfixExpr(infixExpr->Operator, left, right);
+			return evaluateInfixExpr(infixExpr->Operator, left, right, e);
 		}
 		return new obj::ErrorObject("Node not sup");
 

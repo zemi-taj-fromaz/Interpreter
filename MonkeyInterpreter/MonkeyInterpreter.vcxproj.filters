@@ -47,5 +47,8 @@
     <ClInclude Include="evaluator\evaluator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="environment\environment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
