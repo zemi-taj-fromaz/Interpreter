@@ -23,6 +23,10 @@ namespace eval
 				auto* retObj = dynamic_cast<obj::ReturnValue*>(ret);
 				return retObj->obj;
 			}
+			if (ret->Type() == obj::ERROR_OBJ) {
+				//auto* retObj = dynamic_cast<obj::ErrorObject*>(ret);
+				return ret;
+			}
 		}
 		return ret;
 	}
@@ -34,6 +38,9 @@ namespace eval
 		{
 			ret = Evaluate(s);
 			if (ret->Type() == obj::RETURN_OBJ) {
+				return ret;
+			}
+			if (ret->Type() == obj::ERROR_OBJ) {
 				return ret;
 			}
 		}
@@ -54,14 +61,14 @@ namespace eval
 		{
 			return TRUE;
 		}
-		return FALSE;
+		return new obj::ErrorObject("Cannot call ! operator on that type of obj");
 	}
 
 	obj::Object* evalMinusPrefixOperator(obj::Object* obj)
 	{
 		if (obj->Type() != obj::INTEGER_OBJ)
 		{
-			return null;
+			return new obj::ErrorObject("Cannot call - prefix operator on object that is not INT");
 		}
 		
 		
@@ -70,7 +77,7 @@ namespace eval
 			integer->Value *= -1;
 			return integer;
 		}
-		return null;
+		return new obj::ErrorObject("Cannot call - prefix operator on object that is not INT");
 	}
 
 	obj::Object* evaluatePrefixExpr(char oper, obj::Object* obj)
@@ -86,7 +93,7 @@ namespace eval
 				return evalMinusPrefixOperator(obj);
 			}
 			default:
-				return null;
+				return new obj::ErrorObject("Invalid prefix operator");
 		}
 	}
 
@@ -94,7 +101,8 @@ namespace eval
 	{
 		auto* leftInt = dynamic_cast<obj::Integer*>(left);
 		auto* rightInt = dynamic_cast<obj::Integer*>(right);
-		if (!leftInt || !rightInt) return null;
+		if (!leftInt || !rightInt) return new obj::ErrorObject("Cannot call infix numerical operator(*,+,-,/) on objects that are not INT");
+
 
 		switch (oper)
 		{
@@ -117,7 +125,7 @@ namespace eval
 			return new obj::Integer(leftInt->Value / rightInt->Value);
 		}
 		default:
-			return null;
+			return new obj::ErrorObject("Invalid Infix operator");
 		}
 	}
 
@@ -148,7 +156,8 @@ namespace eval
 			if (oper == "!=") return new obj::Boolean(leftBool->Value != rightBool->Value);
 		}
 
-		return null;
+		return new obj::ErrorObject("Illegal argument types for infix operator");
+
 	}
 
 	obj::Object* evaluateInfixExpr(std::string oper, obj::Object* left, obj::Object* right)
@@ -162,7 +171,8 @@ namespace eval
 		{
 			return evalLogicalInfixOperator(oper, left, right);
 		}
-		return null;
+		return new obj::ErrorObject("Unsupported infix operator");
+
 	}
 
 	obj::Object* evaluateIfExpr(ast::IfExpression* ifExpr)
@@ -194,7 +204,8 @@ namespace eval
 			}
 			return null;
 		}
-		return null;
+		return new obj::ErrorObject("Condition in if expression evaluates to null");
+
 	}
 
 	obj::Object* Evaluate(ast::Node* node)
@@ -214,7 +225,9 @@ namespace eval
 		}
 		else if (auto* retStmt = dynamic_cast<ast::ReturnStatement*>(node))
 		{
-			return new obj::ReturnValue(Evaluate(retStmt->Value));
+			obj::Object* o = Evaluate(retStmt->Value);
+			if (o->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in return statement");
+			return new obj::ReturnValue(o);
 		}
 		else if (auto* ifExpr = dynamic_cast<ast::IfExpression*>(node))
 		{
@@ -232,16 +245,22 @@ namespace eval
 		else if (auto* prefixExpr = dynamic_cast<ast::PrefixExpression*>(node))
 		{
 			auto* right = Evaluate(prefixExpr->Right);
+			if (right->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in perfix expr");
 			char OPER = prefixExpr->Operator[0];
 			return evaluatePrefixExpr(OPER, right);
 		}
 		else if (auto* infixExpr = dynamic_cast<ast::InfixExpression*>(node))
 		{
-			auto* right = Evaluate(infixExpr->Right);
 			auto* left = Evaluate(infixExpr->Left);
+			if (left->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in left infix expr");
+
+			auto* right = Evaluate(infixExpr->Right);
+			if (right->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in right infix expr");
+
 			return evaluateInfixExpr(infixExpr->Operator, left, right);
 		}
-		return nullptr;
+		return new obj::ErrorObject("Node not sup");
+
 	}
 
 

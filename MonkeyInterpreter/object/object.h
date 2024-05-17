@@ -8,6 +8,7 @@ namespace obj
 	const std::string INTEGER_OBJ = "INTEGER";
 	const std::string RETURN_OBJ = "RETURN";
 	const std::string BOOLEAN_OBJ = "BOOLEAN";
+	const std::string ERROR_OBJ = "ERROR";
 	const std::string NULL_OBJ = "NULL";
 
 	struct Object
@@ -30,6 +31,14 @@ namespace obj
 		virtual std::string Type() { return RETURN_OBJ; }
 		virtual std::string Inspect() { return obj->Inspect(); }
 		Object* obj;
+	};
+
+	struct ErrorObject : public Object
+	{
+		ErrorObject(std::string message) : msg(message) {}
+		std::string msg;
+		virtual std::string Type() { return ERROR_OBJ; }
+		virtual std::string Inspect() { return msg; }
 	};
 
 	struct Boolean : public Object
