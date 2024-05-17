@@ -139,6 +139,8 @@
     <ClCompile Include="token\Token.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="evaluator\evaluator.h" />
+    <ClInclude Include="object\object.h" />
     <ClInclude Include="parser\parser.h" />
     <ClInclude Include="parser\parser_test.h" />
   </ItemGroup>

@@ -4,6 +4,7 @@
 
 #include "lexer/Lexer.h"
 #include "parser/parser_test.h"
+#include "evaluator/evaluator.h"
 
 int main()
 {
@@ -16,8 +17,11 @@ int main()
 
 		ast::Program program = p.ParseProgram();
 		
-		std::cout << program.String() << std::endl;
-	
+		auto* eval = eval::Evaluate(&program);
+		if (eval) {
+			std::cout << eval->Inspect() << std::endl;
+			std::cout << std::endl;
+		}
     }
 	
 }

@@ -273,6 +273,7 @@ namespace parser
 
 		ast::Expression* parseGroupedExpression()
 		{
+			nextToken();
 			ast::Expression* e = parseExpression(LOWEST);
 			if (!expectPeek(Token::RPAREN))
 			{

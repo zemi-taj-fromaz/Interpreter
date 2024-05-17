@@ -12,17 +12,20 @@ namespace ast
 		virtual std::string TokenLiteral() = 0; // for debugging and testing
 	};
 
-	struct Statement
+	struct Statement : public Node
 	{
 		virtual void statementNode() = 0;
 		virtual std::string String() = 0;
+		virtual std::string TokenLiteral() { return ""; }; // for debugging and testing
+
 	};
 
-	struct Expression
+	struct Expression: public Node
 	{
 
 		virtual std::string String() = 0;
 		virtual void expressionNode() = 0;
+		virtual std::string TokenLiteral() { return ""; }; // for debugging and testing
 	};
 
 	struct IntegerLiteral : public Expression
@@ -223,8 +226,11 @@ namespace ast
 		virtual void expressionNode() override {}
 	};
 
-	struct Program
+	struct Program : public Node
 	{
+		virtual std::string TokenLiteral() { return ""; } // for debugging and testing
+
+
 		std::string String()
 		{
 			std::string ret = "";
