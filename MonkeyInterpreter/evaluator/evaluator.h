@@ -6,7 +6,7 @@
 
 namespace eval
 {
-	obj::Object* Evaluate(ast::Node* node);
+	obj::Object* Evaluate(ast::Node* node, env::Environment& e);
 
 	obj::Boolean* TRUE = new obj::Boolean(true);
 	obj::Boolean* FALSE = new obj::Boolean(false);
@@ -208,6 +208,52 @@ namespace eval
 
 	}
 
+	std::vector<obj::Object*> evaluateExpressions(std::vector<ast::Expression*> expressions, env::Environment& e)
+	{
+		std::vector<obj::Object*> ret;
+		for (auto* expr : expressions)
+		{
+			auto* evaluatedExpr = Evaluate(expr, e);
+			if (evaluatedExpr->Type() == obj::ERROR_OBJ) return { evaluatedExpr };
+			ret.push_back(evaluatedExpr);
+		}
+
+		return ret;
+	}
+
+	env::Environment* extendFunctionEnv(obj::Function* function, std::vector<obj::Object*> args)
+	{
+		auto* newEnv = env::createEnclosedEnvironment(function->env);
+
+		for (int i = 0; i < function->Parameters.size(); i++)
+		{
+			auto* p = function->Parameters[i];
+			newEnv->set(p->Value, args[i]);
+		}
+
+		return newEnv;
+	}
+
+	obj::Object* unwrapReturnValue(obj::Object* wrapped)
+	{
+		if (auto* returnValue = dynamic_cast<obj::ReturnValue*>(wrapped))
+		{
+			return returnValue->obj;
+		}
+		return nullptr;
+	}
+
+	obj::Object* applyFunction(obj::Object* function, std::vector<obj::Object*> args, env::Environment& e)
+	{
+		auto* fn = dynamic_cast<obj::Function*>(function);
+		if (!fn) return nullptr;
+		fn->env = &e;
+		auto* extendedFunctionEnv = extendFunctionEnv(fn, args);
+
+		obj::Object* evaluated = Evaluate(fn->body, *extendedFunctionEnv);
+		return unwrapReturnValue(evaluated);
+	}
+
 	obj::Object* Evaluate(ast::Node* node, env::Environment& e)
 	{
 
@@ -227,7 +273,13 @@ namespace eval
 		{
 			obj::Object* o = Evaluate(retStmt->Value, e);
 			if (o->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror in return statement");
+			//TODO what should this return?
 			return new obj::ReturnValue(o);
+		}
+		else if (auto* function = dynamic_cast<ast::FunctionLiteral*>(node))
+		{
+			//TODO what should this return?
+			return new obj::Function(function->Body, function->Parameters);
 		}
 		else if (auto* letStmt = dynamic_cast<ast::LetStatement*>(node))
 		{
@@ -253,6 +305,17 @@ namespace eval
 		else if (auto* boolPtr = dynamic_cast<ast::Boolean*>(node))
 		{
 			return boolPtr->Value ? TRUE : FALSE;
+		}
+		else if (auto* callExpr = dynamic_cast<ast::CallExpression*>(node))
+		{
+			auto* function = Evaluate(callExpr->Function, e);
+			if (function->Type() == obj::ERROR_OBJ) return new obj::ErrorObject("errror while evaluating function");
+
+			std::vector<obj::Object*> args = evaluateExpressions(callExpr->Arguments, e);
+
+
+
+			return applyFunction(function, args, e);
 		}
 		else if (auto* prefixExpr = dynamic_cast<ast::PrefixExpression*>(node))
 		{
